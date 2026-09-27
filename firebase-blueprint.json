@@ -1,0 +1,207 @@
+{
+  "entities": {
+    "BloodRequest": {
+      "title": "BloodRequest",
+      "description": "An emergency blood donation request created by patients, families, or hospitals",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the blood request"
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Name of the patient in need of blood",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "hospital": {
+          "type": "string",
+          "description": "Hospital or medical center name",
+          "minLength": 2,
+          "maxLength": 150
+        },
+        "city": {
+          "type": "string",
+          "description": "City or governorate in Egypt",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "requiredBloodType": {
+          "type": "string",
+          "description": "Required blood group",
+          "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+        },
+        "unitsNeeded": {
+          "type": "number",
+          "description": "Number of blood bags/units required"
+        },
+        "unitsPledged": {
+          "type": "number",
+          "description": "Number of blood bags pledged by donors"
+        },
+        "urgency": {
+          "type": "string",
+          "description": "Urgency classification level",
+          "enum": ["CRITICAL", "URGENT", "NORMAL"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the request",
+          "enum": ["ACTIVE", "FULFILLED", "CANCELLED"]
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "Contact or WhatsApp phone number for patient family",
+          "minLength": 8,
+          "maxLength": 20
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional clinical or logistical notes",
+          "maxLength": 500
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for urgent blood transfusion",
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of creation"
+        },
+        "createdByEmail": {
+          "type": "string",
+          "description": "Email of user or coordinator who posted the request",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "id",
+        "patientName",
+        "hospital",
+        "city",
+        "requiredBloodType",
+        "unitsNeeded",
+        "unitsPledged",
+        "urgency",
+        "status",
+        "contactPhone",
+        "createdAt"
+      ]
+    },
+    "Donor": {
+      "title": "Donor",
+      "description": "A volunteer blood donor registered in the directory",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique donor ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Donor full name",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "Donor email address",
+          "maxLength": 100
+        },
+        "phone": {
+          "type": "string",
+          "description": "Donor contact / WhatsApp number",
+          "minLength": 8,
+          "maxLength": 20
+        },
+        "bloodType": {
+          "type": "string",
+          "description": "Donor blood type",
+          "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+        },
+        "city": {
+          "type": "string",
+          "description": "Donor city / governorate",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "donorAvailability": {
+          "type": "boolean",
+          "description": "Whether donor is currently available to donate"
+        },
+        "canTravel": {
+          "type": "boolean",
+          "description": "Whether donor can travel between nearby cities"
+        },
+        "lastDonationDate": {
+          "type": "string",
+          "description": "Date of last donation",
+          "maxLength": 50
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes or volunteer preferences",
+          "maxLength": 500
+        },
+        "totalDonationsCount": {
+          "type": "number",
+          "description": "Total historical blood donations count"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of registration"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "phone",
+        "bloodType",
+        "city",
+        "donorAvailability",
+        "createdAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Platform administrator record",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase user ID"
+        },
+        "email": {
+          "type": "string",
+          "description": "Administrator email address"
+        },
+        "role": {
+          "type": "string",
+          "description": "Admin role",
+          "enum": ["admin", "superadmin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when admin role was granted"
+        }
+      },
+      "required": ["uid", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/blood_requests/{requestId}": {
+      "schema": "BloodRequest",
+      "description": "Public emergency blood donation requests searchable by all visitors"
+    },
+    "/donors/{donorId}": {
+      "schema": "Donor",
+      "description": "Registered willing blood donors directory"
+    },
+    "/admins/{userId}": {
+      "schema": "AdminUser",
+      "description": "Authorized administrators with elevated management and delete privileges"
+    }
+  }
+}

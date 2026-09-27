@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'sonsonlolo88@gmail.com' ||
+        request.auth.token.email == 'admin@damak.life' ||
+        request.auth.token.email == 'printparadise20102010@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidBloodType(bt) {
+      return bt in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+    }
+
+    function isValidBloodRequest(data) {
+      return data.patientName is string && data.patientName.size() >= 2 && data.patientName.size() <= 100
+        && data.hospital is string && data.hospital.size() >= 2 && data.hospital.size() <= 150
+        && data.city is string && data.city.size() >= 2 && data.city.size() <= 100
+        && isValidBloodType(data.requiredBloodType)
+        && data.unitsNeeded is number && data.unitsNeeded > 0 && data.unitsNeeded <= 50
+        && data.contactPhone is string && data.contactPhone.size() >= 8 && data.contactPhone.size() <= 20
+        && data.urgency in ['CRITICAL', 'URGENT', 'NORMAL']
+        && data.status in ['ACTIVE', 'FULFILLED', 'CANCELLED'];
+    }
+
+    function isValidDonor(data) {
+      return data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.phone is string && data.phone.size() >= 8 && data.phone.size() <= 20
+        && isValidBloodType(data.bloodType)
+        && data.city is string && data.city.size() >= 2 && data.city.size() <= 100
+        && data.donorAvailability is bool;
+    }
+
+    match /blood_requests/{requestId} {
+      allow read: if true;
+      allow create: if isValidBloodRequest(incoming());
+      allow update: if isValidBloodRequest(incoming()) && (
+        isAdmin() ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['unitsPledged', 'pledgedDonors', 'status'])
+      );
+      allow delete: if true;
+    }
+
+    match /donors/{donorId} {
+      allow read: if true;
+      allow create: if isValidDonor(incoming());
+      allow update: if isValidDonor(incoming()) && (
+        isAdmin() ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['donorAvailability', 'lastDonationDate', 'totalDonationsCount', 'notes'])
+      );
+      allow delete: if true;
+    }
+
+    match /admins/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
