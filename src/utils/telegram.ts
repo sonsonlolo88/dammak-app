@@ -2,6 +2,10 @@ import { TelegramConfig, UrgentRequest } from '../types/blood';
 
 export const OFFICIAL_TELEGRAM_CHANNEL = 'https://t.me/dammak_alerts';
 
+// القيم الافتراضية الثابتة الخاصة بالنظام
+const DEFAULT_BOT_TOKEN = '8992340194:AAGaQN9wF-FBwAgzP8tkOdmTRra9rFMr3ho';
+const DEFAULT_CHAT_ID = '@dammak_alerts';
+
 export function formatTelegramHtmlMessage(req: UrgentRequest): string {
   const urgencyHeader =
     req.urgency === 'critical'
@@ -36,7 +40,11 @@ export async function sendTelegramApiAlert(
   config: TelegramConfig,
   request: UrgentRequest
 ): Promise<{ success: boolean; message: string }> {
-  if (!config.botToken || !config.chatId) {
+  // استخدام الإعداد المدخل أو اللجوء للقيم الافتراضية الثابتة
+  const activeToken = (config?.botToken?.trim()) || DEFAULT_BOT_TOKEN;
+  const activeChatId = (config?.chatId?.trim()) || DEFAULT_CHAT_ID;
+
+  if (!activeToken || !activeChatId) {
     return {
       success: false,
       message: 'يرجى إدخال رمز البوت (Bot Token) ومعرّف القناة أو المحادثة (Chat ID) لإرسال التنبيه التلقائي عبر Telegram API مباشرة.',
@@ -45,7 +53,7 @@ export async function sendTelegramApiAlert(
 
   try {
     const text = formatTelegramHtmlMessage(request);
-    const endpoint = `https://api.telegram.org/bot${config.botToken.trim()}/sendMessage`;
+    const endpoint = `https://api.telegram.org/bot${activeToken}/sendMessage`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -53,7 +61,7 @@ export async function sendTelegramApiAlert(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        chat_id: config.chatId.trim(),
+        chat_id: activeChatId,
         text: text,
         parse_mode: 'HTML',
         disable_web_page_preview: true,
